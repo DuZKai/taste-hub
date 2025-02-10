@@ -1,0 +1,28 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: taste-hub
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.101.65:3306/hmdp?useSSL=false&serverTimezone=UTC
+    username: root
+    password: mysql
+  data:
+    redis:
+      host: 192.168.101.65 # redis地址
+      port: 6379
+      password: redis
+      database: 0
+      timeout: 10000
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 10
+          min-idle: 1
+          time-between-eviction-runs: 10s
+mybatis-plus:
+  type-aliases-package: com.tasteHub.entity # 别名扫描包
+logging:
+  level:
+    com.tasteHub: debug
