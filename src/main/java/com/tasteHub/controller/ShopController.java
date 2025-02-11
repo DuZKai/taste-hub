@@ -7,7 +7,7 @@ import com.tasteHub.aspect.ApiOperationLog;
 import com.tasteHub.dto.Result;
 import com.tasteHub.entity.Shop;
 import com.tasteHub.service.IShopService;
-import com.tasteHub.utils.SystemConstants;
+import com.tasteHub.constant.SystemConstants;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.annotation.Resource;

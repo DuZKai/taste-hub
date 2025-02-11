@@ -1,7 +1,7 @@
 package com.tasteHub.config;
 
-import com.tasteHub.utils.LoginInterceptor;
-import com.tasteHub.utils.RefreshTokenInterceptor;
+import com.tasteHub.Interceptor.LoginInterceptor;
+import com.tasteHub.Interceptor.RefreshTokenInterceptor;
 import jakarta.annotation.Resource;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;

@@ -1,6 +1,105 @@
 # 口碑宝
 
+
+
+## Zookeeper安装（单宿主机实现集群演示）
+
+1. Linux虚拟机和docker下载
+2. docker-compose安装
+
+```bash
+curl -L "https://github.com/docker/compose/releases/download/1.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+```
+
+3. 检查版本（验证是否安装成功）
+
+```
+docker-compose --version
+```
+
+4. 开始配置，新建三个挂载目录（可以自定义）
+
+```
+mkdir /data/soft/zookeeper/zookeeper-cluster/node1
+mkdir /data/soft/zookeeper/zookeeper-cluster/node2
+mkdir /data/soft/zookeeper/zookeeper-cluster/node3
+```
+
+5. 自定义bridge网络
+
+```java
+docker network create --driver bridge --subnet=172.18.0.0/16 --gateway=172.18.0.1 zoonet
+```
+
+注意：如果产生错误：`Error response from daemon: Pool overlaps with other one on this address space`，则说明有相同bridge网络
+
+使用docker network ls逐个查看不重复的网络ip，并自定义（后续也需要修改yml内配置）
+
+5. 将./init目录下`docker-compose.yml`复制到上述文件夹，当前目录如下：
+
+![image-20250210213434715](img/image-20250210213434715.png)
+
+6. 使用`docker-compose -f docker-compose.yml up -d`启动集群
+
+![image-20250210214138262](img/image-20250210214138262.png)
+
+7. 进入一个容器（使用客户端验证）
+
+```bash
+[root@localhost zookeeper-cluster]# docker exec -it fdb5420707a3 bash
+root@zoo3:/apache-zookeeper-3.9.3-bin# ./bin/zkCli.sh
+Connecting to localhost:2181
+
+....
+
+WatchedEvent state:SyncConnected type:None path:null zxid: -1
+[zk: localhost:2181(CONNECTED) 0] ls /
+[zookeeper]
+[zk: localhost:2181(CONNECTED) 1] create /hi
+Created /hi
+[zk: localhost:2181(CONNECTED) 2] ls /
+[hi, zookeeper]
+```
+
+8. 进入另一个容器（验证之前服务端新增是否成功）
+
+```bash
+[root@localhost zookeeper-cluster]# docker exec -it 6534fdbbb81e bash
+root@zoo2:/apache-zookeeper-3.9.3-bin# ./bin/zkCli.sh
+Connecting to localhost:2181
+
+...
+
+WatchedEvent state:SyncConnected type:None path:null
+
+[zk: localhost:2181(CONNECTED) 0] ls /
+[hi, zookeeper]
+```
+
+9. 开启防火墙，以供外部访问
+
+```bash
+firewall-cmd --zone=public --add-port=2181/tcp --permanent
+firewall-cmd --zone=public --add-port=2182/tcp --permanent
+firewall-cmd --zone=public --add-port=2183/tcp --permanent
+systemctl restart firewalld
+firewall-cmd --list-all
+```
+
+参考文献：https://www.cnblogs.com/LUA123/p/11428113.html
+
+PS：需停止时使用
+
+```bash
+docker-compose stop
+```
+
+
+
+
+
 ## 启动流程
+
 1. 配置数据库，导入hmdp.sql
 2. 下载Redis并启动Redis
 3. 修改application.yml中的数据库和Redis配置
@@ -17,9 +116,15 @@
 
 - canal监听mysql并且自动同步到redis
 - Sentinel监听
-- 
+-  Sharding-JDBC 实现分库分表
+- caffeine实现本地缓存，缓存热点产品完整信息，再使用Redis集群存储所有产品信息，最终到MySQL.
+- 设计了服务降级和熔断机制，通过Sentinel实现系统限流保护
+- 使用seata完成TCC等分布式事务方案
+- 优惠券过期使用RocketMQ的延时任务实现
+- 使用canal放到mongodb使得数据库修改可以同步到mongodb
+- 分库分表：https://ost.51cto.com/posts/13440
 
-
+ZIPKIN和MICROMETER搭配使用链路追踪
 
 **消息队列**：如 **RabbitMQ** 或 **Kafka**，用于解耦、异步处理和事件驱动架构。
 
@@ -37,15 +142,7 @@
 
 
 
-caffeine实现本地缓存，缓存热点产品完整信息，再使用Redis集群存储所有产品信息，最终到MySQL.
-设计了服务降级和熔断机制，通过Sentinel实现系统限流保护
 
-使用seata完成TCC等分布式事务方案
-
-zookeeper
-
-优惠券过期使用RocketMQ的延时任务实现
-使用canal放到mongodb使得数据库修改可以同步到mongodb
 rabbitMQ使用、拓展cacheable，从8升级到21，效率提高一倍，重点升级Spring Security，从5到6，完全重构验证服务，加入Knife4j后端接口服务
 
 一、采用多级缓存(本地缓存+Redis集群)架构，将热点产品信息查询延迟控制在10ms以内

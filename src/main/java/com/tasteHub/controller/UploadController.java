@@ -4,7 +4,7 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import com.tasteHub.aspect.ApiOperationLog;
 import com.tasteHub.dto.Result;
-import com.tasteHub.utils.SystemConstants;
+import com.tasteHub.constant.SystemConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;

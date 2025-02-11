@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.annotation.Resource;
 import java.util.List;
 
-import static com.tasteHub.utils.RedisConstants.SECKILL_STOCK_KEY;
+import static com.tasteHub.constant.RedisConstants.SECKILL_STOCK_KEY;
 
 @Service
 public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> implements IVoucherService {

@@ -1,4 +1,4 @@
-package com.tasteHub.utils;
+package com.tasteHub.constant;
 
 public class SystemConstants {
     public static final String IMAGE_UPLOAD_DIR = "D:\\javaProject\\Project\\hm-dianping\\nginx-1.18.0\\html\\hmdp\\imgs\\";

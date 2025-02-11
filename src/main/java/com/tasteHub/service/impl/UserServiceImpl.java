@@ -27,8 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static com.tasteHub.utils.RedisConstants.*;
-import static com.tasteHub.utils.SystemConstants.USER_NICK_NAME_PREFIX;
+import static com.tasteHub.constant.RedisConstants.*;
+import static com.tasteHub.constant.SystemConstants.USER_NICK_NAME_PREFIX;
 
 @Slf4j
 @Service

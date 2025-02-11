@@ -1,18 +1,16 @@
 package com.tasteHub.service.impl;
 
-import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tasteHub.dto.Result;
 import com.tasteHub.entity.Shop;
 import com.tasteHub.mapper.ShopMapper;
+import com.tasteHub.service.IDistributedLock;
 import com.tasteHub.service.IShopService;
 import com.tasteHub.utils.CacheClient;
-import com.tasteHub.utils.RedisData;
-import com.tasteHub.utils.SystemConstants;
+import com.tasteHub.constant.SystemConstants;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
@@ -23,13 +21,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.Resource;
-import java.time.LocalDateTime;
+
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static com.tasteHub.utils.RedisConstants.*;
+import static com.tasteHub.constant.RedisConstants.*;
 
 @Service
 public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IShopService {
@@ -41,20 +37,23 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     @Resource
     private CacheClient cacheClient;
 
+    @Autowired
+    private IDistributedLock distributedLock;
+
     @Override
     public Result queryById(Long id) {
-        // // 解决缓存穿透
+        // 解决缓存穿透
         Shop shop = cacheClient
                 .queryWithPassThrough(CACHE_SHOP_KEY, id, Shop.class, this::getById, CACHE_SHOP_TTL, TimeUnit.MINUTES);
 
         // // 互斥锁解决缓存击穿
-        // // Shop shop = cacheClient
-        // //         .queryWithMutex(CACHE_SHOP_KEY, id, Shop.class, this::getById, CACHE_SHOP_TTL, TimeUnit.MINUTES);
+        // Shop shop = cacheClient
+        //         .queryWithMutex(CACHE_SHOP_KEY, id, Shop.class, this::getById, CACHE_SHOP_TTL, TimeUnit.MINUTES);
         //
         // // 逻辑过期解决缓存击穿
-        // // Shop shop = cacheClient
-        // //         .queryWithLogicalExpire(CACHE_SHOP_KEY, id, Shop.class, this::getById, 20L, TimeUnit.SECONDS);
-        //
+        // Shop shop = cacheClient
+        //         .queryWithLogicalExpire(CACHE_SHOP_KEY, id, Shop.class, this::getById, CACHE_SHOP_TTL, TimeUnit.SECONDS);
+
 
         // 缓存穿透
         // Shop shop = queryWithPassThrough(id);
@@ -121,9 +120,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     //     }
     //     return shop;
     // }
-
-    private static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(10);
-
+    //
+    // private static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(10);
+    //
     // public Shop queryWithLogicalExpire(Long id) {
     //     String key = CACHE_SHOP_KEY + id;
     //     // 1.查询缓存
@@ -164,17 +163,17 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     //     }
     //     return shop;
     // }
-
-    public void saveShop2Redis(Long id, Long expireSeconds) {
-        // 查询店铺数据
-        Shop shop = getById(id);
-        RedisData redisData = new RedisData();
-        redisData.setData(shop);
-        redisData.setExpireTime(LocalDateTime.now().plusSeconds(expireSeconds));
-        // 写入redis
-        stringRedisTemplate.opsForValue().set(CACHE_SHOP_KEY+id, JSONUtil.toJsonStr(redisData));
-    }
-
+    //
+    // public void saveShop2Redis(Long id, Long expireSeconds) {
+    //     // 查询店铺数据
+    //     Shop shop = getById(id);
+    //     RedisData redisData = new RedisData();
+    //     redisData.setData(shop);
+    //     redisData.setExpireTime(LocalDateTime.now().plusSeconds(expireSeconds));
+    //     // 写入redis
+    //     stringRedisTemplate.opsForValue().set(CACHE_SHOP_KEY+id, JSONUtil.toJsonStr(redisData));
+    // }
+    //
     // public Shop queryWithPassThrough(Long id) {
     //     String key = CACHE_SHOP_KEY + id;
     //     // 1.查询缓存
@@ -219,11 +218,23 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         if (id == null) {
             return Result.fail("店铺id不能为空");
         }
-        // 1.更新数据库
-        updateById(shop);
-        // 2.删除缓存
-        stringRedisTemplate.delete(CACHE_SHOP_KEY + id);
-        return Result.ok();
+        try {
+            // 获取分布式锁并执行任务
+            distributedLock.executeWithLock(() -> {
+                // 1.更新数据库
+                updateById(shop);
+                // 2.删除缓存
+                stringRedisTemplate.delete(CACHE_SHOP_KEY + id);
+            }, 3, TimeUnit.SECONDS); // 设置锁的超时时间为3秒
+
+            return Result.ok();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.fail("更新失败，获取锁时发生异常");
+        } finally {
+            // 分布式锁的关闭操作可以放在外部进行，保证在所有业务操作后释放锁
+            distributedLock.close();
+        }
     }
 
     @Override

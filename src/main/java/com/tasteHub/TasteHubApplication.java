@@ -12,6 +12,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 public class TasteHubApplication {
 
     public static void main(String[] args) {
+        System.setProperty("zookeeper.sasl.client", "false");
         SpringApplication.run(TasteHubApplication.class, args);
     }
 

@@ -7,7 +7,7 @@ import com.tasteHub.dto.Result;
 import com.tasteHub.dto.UserDTO;
 import com.tasteHub.entity.Blog;
 import com.tasteHub.service.IBlogService;
-import com.tasteHub.utils.SystemConstants;
+import com.tasteHub.constant.SystemConstants;
 import com.tasteHub.utils.UserHolder;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;

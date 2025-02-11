@@ -14,7 +14,7 @@ import com.tasteHub.mapper.BlogMapper;
 import com.tasteHub.service.IBlogService;
 import com.tasteHub.service.IFollowService;
 import com.tasteHub.service.IUserService;
-import com.tasteHub.utils.SystemConstants;
+import com.tasteHub.constant.SystemConstants;
 import com.tasteHub.utils.UserHolder;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
@@ -27,8 +27,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.tasteHub.utils.RedisConstants.BLOG_LIKED_KEY;
-import static com.tasteHub.utils.RedisConstants.FEED_KEY;
+import static com.tasteHub.constant.RedisConstants.BLOG_LIKED_KEY;
+import static com.tasteHub.constant.RedisConstants.FEED_KEY;
 
 
 @Service

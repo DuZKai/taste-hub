@@ -4,7 +4,12 @@ import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.tasteHub.TasteHubApplication;
+import com.tasteHub.entity.Shop;
+import com.tasteHub.service.IShopService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -14,8 +19,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
-import static com.tasteHub.utils.RedisConstants.CACHE_NULL_TTL;
-import static com.tasteHub.utils.RedisConstants.LOCK_SHOP_KEY;
+import static com.tasteHub.constant.RedisConstants.*;
+import static com.tasteHub.constant.RedisConstants.CACHE_SHOP_TTL;
 
 @Slf4j
 @Component
@@ -73,6 +78,9 @@ public class CacheClient {
         return r;
     }
 
+    // 击穿主要针对热点数据，这类数据提前存放在缓存中。
+    // 查询热点数据一定命中，如果未命中则说明不是热点数据，直接返回null即可，无需进一步查数据库，因此不再需要缓存空对象。
+    // 会有一定时间使用过期数据，但是不会有空对象的
     public <R, ID> R queryWithLogicalExpire(
             String keyPrefix, ID id, Class<R> type, Function<ID, R> dbFallback, Long time, TimeUnit unit) {
         String key = keyPrefix + id;
@@ -99,7 +107,7 @@ public class CacheClient {
         boolean isLock = tryLock(lockKey);
         // 6.2.判断是否获取锁成功
         if (isLock){
-            // 6.3.成功，开启独立线程，实现缓存重建
+            // 6.3.成功，开启独立线程，实现缓存重建，新线程重建缓存使得当前线程不会被阻塞
             CACHE_REBUILD_EXECUTOR.submit(() -> {
                 try {
                     // 查询数据库
@@ -174,5 +182,25 @@ public class CacheClient {
 
     private void unlock(String key) {
         stringRedisTemplate.delete(key);
+    }
+
+    // 使用方法
+    public static void main(String[] args) {
+        ConfigurableApplicationContext run = SpringApplication.run(TasteHubApplication.class, args);
+        CacheClient cacheClient = run.getBean(CacheClient.class);
+        IShopService shopService = run.getBean(IShopService.class);
+        Long id = 1L;
+        // 解决缓存穿透
+        Shop shop = cacheClient
+                .queryWithPassThrough(CACHE_SHOP_KEY, id, Shop.class, shopService::getById, CACHE_SHOP_TTL, TimeUnit.MINUTES);
+
+        // 互斥锁解决缓存击穿
+        shop = cacheClient
+                .queryWithMutex(CACHE_SHOP_KEY, id, Shop.class, shopService::getById, CACHE_SHOP_TTL, TimeUnit.MINUTES);
+
+        // 逻辑过期解决缓存击穿
+        shop = cacheClient
+                .queryWithLogicalExpire(CACHE_SHOP_KEY, id, Shop.class, shopService::getById, 20L, TimeUnit.SECONDS);
+
     }
 }

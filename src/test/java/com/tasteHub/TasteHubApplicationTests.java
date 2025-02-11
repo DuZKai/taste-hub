@@ -20,8 +20,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.tasteHub.utils.RedisConstants.CACHE_SHOP_KEY;
-import static com.tasteHub.utils.RedisConstants.SHOP_GEO_KEY;
+import static com.tasteHub.constant.RedisConstants.CACHE_SHOP_KEY;
+import static com.tasteHub.constant.RedisConstants.SHOP_GEO_KEY;
 
 @SpringBootTest
 class TasteHubApplicationTests {

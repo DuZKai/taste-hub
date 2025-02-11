@@ -1,8 +1,9 @@
-package com.tasteHub.utils;
+package com.tasteHub.Interceptor;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.tasteHub.dto.UserDTO;
+import com.tasteHub.utils.UserHolder;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -11,8 +12,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static com.tasteHub.utils.RedisConstants.LOGIN_USER_KEY;
-import static com.tasteHub.utils.RedisConstants.LOGIN_USER_TTL;
+import static com.tasteHub.constant.RedisConstants.LOGIN_USER_KEY;
+import static com.tasteHub.constant.RedisConstants.LOGIN_USER_TTL;
 
 public class RefreshTokenInterceptor implements HandlerInterceptor {
 

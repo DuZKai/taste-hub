@@ -1,5 +1,6 @@
-package com.tasteHub.utils;
+package com.tasteHub.Interceptor;
 
+import com.tasteHub.utils.UserHolder;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.HandlerInterceptor;
