@@ -16,6 +16,7 @@ import com.tasteHub.service.IFollowService;
 import com.tasteHub.service.IUserService;
 import com.tasteHub.constant.SystemConstants;
 import com.tasteHub.utils.UserHolder;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;

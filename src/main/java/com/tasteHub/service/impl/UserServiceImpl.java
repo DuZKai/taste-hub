@@ -15,11 +15,14 @@ import com.tasteHub.utils.RegexUtils;
 import com.tasteHub.utils.UserHolder;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.BitFieldSubCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
+
+import java.io.FileWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -81,6 +84,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             user = createUserWithPhone(phone);
         }
 
+        String token = keepTokenToRedis(user);
+
+        // 8.返回token
+        return Result.ok(token);
+    }
+
+    @Override
+    public String keepTokenToRedis(User user){
         // 7.保存用户信息到 redis中
         // 7.1.随机生成token，作为登录令牌
         String token = UUID.randomUUID().toString(true);
@@ -95,9 +106,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         stringRedisTemplate.opsForHash().putAll(tokenKey, userMap);
         // 7.4.设置token有效期
         stringRedisTemplate.expire(tokenKey, LOGIN_USER_TTL, TimeUnit.MINUTES);
-
-        // 8.返回token
-        return Result.ok(token);
+        return token;
     }
 
     @Override
@@ -166,5 +175,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 2.保存用户
         save(user);
         return user;
+    }
+
+    public void generateToken() {
+        List<User> list = list();
+        StringBuilder tokenList = new StringBuilder();
+        for (User user : list) {
+            String token = keepTokenToRedis(user);
+            tokenList.append(token).append("\n");
+        }
+        try (FileWriter writer = new FileWriter("outputToken.txt")){
+            writer.write(tokenList.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

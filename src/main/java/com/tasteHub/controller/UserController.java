@@ -107,4 +107,11 @@ public class UserController {
     public Result signCount(){
         return userService.signCount();
     }
+
+    @GetMapping("/generatetokentoredis")
+    public Result generateTokenToRedis() {
+        userService.generateToken();
+        System.out.println("生成token成功");
+        return Result.ok();
+    }
 }

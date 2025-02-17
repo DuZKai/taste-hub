@@ -119,7 +119,7 @@ docker-compose stop
 -  Sharding-JDBC 实现分库分表
 - caffeine实现本地缓存，缓存热点产品完整信息，再使用Redis集群存储所有产品信息，最终到MySQL.
 - 设计了服务降级和熔断机制，通过Sentinel实现系统限流保护
-- 使用seata完成TCC等分布式事务方案
+- 使用seata完成TCC等分布式事务方案https://seata.apache.org/zh-cn/docs/user/registry/zookeeper/
 - 优惠券过期使用RocketMQ的延时任务实现
 - 使用canal放到mongodb使得数据库修改可以同步到mongodb
 - 分库分表：https://ost.51cto.com/posts/13440
@@ -139,6 +139,7 @@ ZIPKIN和MICROMETER搭配使用链路追踪
 **日志管理**：如 **ELK Stack**（Elasticsearch, Logstash, Kibana）或 **Graylog**，进行集中化日志分析。
 
 **服务发现与注册**：如 **Eureka** 或 **Consul**，支持微服务架构下的服务注册和发现。
+
 
 
 

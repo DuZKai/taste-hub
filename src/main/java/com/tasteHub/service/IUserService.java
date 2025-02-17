@@ -17,4 +17,7 @@ public interface IUserService extends IService<User> {
 
     Result signCount();
 
+    String keepTokenToRedis(User user);
+
+    void generateToken();
 }
